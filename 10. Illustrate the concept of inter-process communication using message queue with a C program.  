@@ -1,0 +1,33 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/ipc.h>
+#include <sys/msg.h>
+
+#define MAX_SIZE 128
+
+struct message {
+    long mtype;
+    char mtext[MAX_SIZE];
+};
+
+int main() {
+    int queue_id;
+    key_t key;
+    struct message msg;
+
+    key = ftok("/tmp", 'a');
+
+    queue_id = msgget(key, 0666 | IPC_CREAT);
+    msg.mtype = 1;
+    sprintf(msg.mtext, "Hello, World!");
+    msgsnd(queue_id, &msg, sizeof(msg.mtext), 0);
+    msgrcv(queue_id, &msg, sizeof(msg.mtext), 0, 0);
+    printf("Received: %s\n", msg.mtext);
+
+    msgctl(queue_id, IPC_RMID, NULL);
+
+    return 0;
+}
